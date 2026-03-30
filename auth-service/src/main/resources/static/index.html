@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VulnShop – Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f0f0f;
+      font-family: 'Segoe UI', sans-serif;
+      color: #e0e0e0;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ff4d4d;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #111;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #2a2a2a;
+      color: #e0e0e0;
+    }
+
+    .form { display: none; flex-direction: column; gap: 16px; }
+    .form.active { display: flex; }
+
+    label { font-size: 12px; color: #888; margin-bottom: 4px; display: block; }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: #ff4d4d; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 11px;
+      background: #ff4d4d;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover { background: #e03e3e; }
+
+    .message {
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .message.success { background: #1a2e1a; color: #4caf50; display: block; }
+    .message.error   { background: #2e1a1a; color: #ff5252; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">VulnShop</div>
+    <div class="subtitle">Intentionally vulnerable demo store</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Login</button>
+      <button class="tab" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login -->
+    <form class="form active" id="login-form" onsubmit="handleLogin(event)">
+      <div>
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="Enter username" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password" required />
+      </div>
+      <div class="message" id="login-msg"></div>
+      <button type="submit">Sign In</button>
+    </form>
+
+    <!-- Register -->
+    <form class="form" id="register-form" onsubmit="handleRegister(event)">
+      <div>
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="Choose a username" required />
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="Enter email" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min 6 characters" required />
+      </div>
+      <div class="message" id="register-msg"></div>
+      <button type="submit">Create Account</button>
+    </form>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0) === (tab === 'login'));
+      });
+      document.getElementById('login-form').classList.toggle('active', tab === 'login');
+      document.getElementById('register-form').classList.toggle('active', tab === 'register');
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'message ' + type;
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          showMsg('login-msg', 'Logged in successfully!', 'success');
+        } else {
+          showMsg('login-msg', data.message || 'Invalid credentials', 'error');
+        }
+      } catch {
+        showMsg('login-msg', 'Server error. Is the app running?', 'error');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value;
+      const email    = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMsg('register-msg', 'Account created! You can now log in.', 'success');
+        } else {
+          showMsg('register-msg', data.message || 'Registration failed', 'error');
+        }
+      } catch {
+        showMsg('register-msg', 'Server error. Is the app running?', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

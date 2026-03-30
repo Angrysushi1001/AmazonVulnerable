@@ -1,4 +1,4 @@
-package auth_service;
+package com.vulnshop.authservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
